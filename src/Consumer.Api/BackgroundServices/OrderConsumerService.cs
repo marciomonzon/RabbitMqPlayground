@@ -83,7 +83,6 @@ public sealed class OrderConsumerService : BackgroundService
             {
                 _logger.LogError(ex, "Erro ao processar a mensagem.");
 
-                // erro, coloque a mensagem novamente na fila
                 await channel.BasicNackAsync(
                     deliveryTag: eventArgs.DeliveryTag,
                     multiple: false,
