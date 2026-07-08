@@ -30,11 +30,18 @@ public sealed class OrderConsumerService : BackgroundService
                 .CreateChannelAsync(stoppingToken);
 
 
+        var arguments = new Dictionary<string, object?>
+        {
+            ["x-dead-letter-exchange"] = RabbitMqConstants.OrdersDeadLetterExchange,
+            ["x-dead-letter-routing-key"] = RabbitMqConstants.OrdersDeadLetterRoutingKey
+        };
+
         await channel.QueueDeclareAsync(
             queue: RabbitMqConstants.OrdersQueue,
             durable: true,
             exclusive: false,
             autoDelete: false,
+            arguments: arguments,
             cancellationToken: stoppingToken);
 
 
@@ -46,6 +53,8 @@ public sealed class OrderConsumerService : BackgroundService
         {
             try
             {
+                throw new Exception("Erro proposital");
+
                 var body = eventArgs.Body.ToArray();
 
                 var json = Encoding.UTF8.GetString(body);
@@ -76,12 +85,11 @@ public sealed class OrderConsumerService : BackgroundService
             {
                 _logger.LogError(ex, "Erro ao processar a mensagem.");
 
-
                 // erro, coloque a mensagem novamente na fila
                 await channel.BasicNackAsync(
                     deliveryTag: eventArgs.DeliveryTag,
                     multiple: false,
-                    requeue: true,
+                    requeue: false,
                     cancellationToken: stoppingToken);
             }
         };

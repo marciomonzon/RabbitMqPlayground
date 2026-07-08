@@ -30,8 +30,30 @@ public sealed class OrderPublisher : IOrderPublisher
             autoDelete: false,
             cancellationToken: cancellationToken);
 
+        await channel.ExchangeDeclareAsync(
+            exchange: RabbitMqConstants.OrdersDeadLetterExchange,
+            type: ExchangeType.Direct,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["x-dead-letter-exchange"] = RabbitMqConstants.OrdersDeadLetterExchange,
+
+            ["x-dead-letter-routing-key"] = RabbitMqConstants.OrdersDeadLetterRoutingKey
+        };
+
         await channel.QueueDeclareAsync(
             queue: RabbitMqConstants.OrdersQueue,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: arguments, // está com a dlq e saberá para onde enviar caso falhe
+            cancellationToken: cancellationToken);
+        
+        await channel.QueueDeclareAsync(
+            queue: RabbitMqConstants.OrdersDeadLetterQueue,
             durable: true,
             exclusive: false,
             autoDelete: false,
@@ -41,6 +63,12 @@ public sealed class OrderPublisher : IOrderPublisher
             queue: RabbitMqConstants.OrdersQueue,
             exchange: RabbitMqConstants.OrdersExchange,
             routingKey: RabbitMqConstants.OrderCreatedRoutingKey,
+            cancellationToken: cancellationToken);
+        
+        await channel.QueueBindAsync(
+            queue: RabbitMqConstants.OrdersDeadLetterQueue,
+            exchange: RabbitMqConstants.OrdersDeadLetterExchange,
+            routingKey: RabbitMqConstants.OrdersDeadLetterRoutingKey,
             cancellationToken: cancellationToken);
 
         var body = JsonSerializer.SerializeToUtf8Bytes(message);
