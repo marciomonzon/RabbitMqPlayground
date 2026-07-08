@@ -1,0 +1,60 @@
+# Build results
+bin/
+obj/
+
+# Visual Studio temporary files, build results, and
+# user-specific files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Visual Studio Code
+.vscode/
+
+# NuGet packages
+*.nupkg
+packages/
+
+# npm packages
+node_modules/
+
+# publish directory
+publish/
+
+# User-specific files
+*.dbmdl
+*.bak
+*.log
+*.csv
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# LocalNuGet
+*.local
+
+# Azure Pipelines
+.vspscc
+
+# Docker
+docker-compose.override.yml
+
+# JetBrains Rider
+*.sln.iml
+
+# Rider crash dumps
+.idea/**/system/
