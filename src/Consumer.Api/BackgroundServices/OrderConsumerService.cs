@@ -53,8 +53,6 @@ public sealed class OrderConsumerService : BackgroundService
         {
             try
             {
-                throw new Exception("Erro proposital");
-
                 var body = eventArgs.Body.ToArray();
 
                 var json = Encoding.UTF8.GetString(body);
