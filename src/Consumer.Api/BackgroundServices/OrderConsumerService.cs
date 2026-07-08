@@ -44,33 +44,52 @@ public sealed class OrderConsumerService : BackgroundService
 
         consumer.ReceivedAsync += async (_, eventArgs) =>
         {
-            var body = eventArgs.Body.ToArray();
-
-            var json =
-                Encoding.UTF8.GetString(body);
-
-
-            var message =
-                JsonSerializer.Deserialize<OrderCreatedMessage>(
-                    json);
-
-
-            if (message is not null)
+            try
             {
+                var body = eventArgs.Body.ToArray();
+
+                var json = Encoding.UTF8.GetString(body);
+
+                var message = JsonSerializer.Deserialize<OrderCreatedMessage>(json);
+
+                if (message is null)
+                    throw new InvalidOperationException("Mensagem inválida.");
+
                 _logger.LogInformation(
-                    "Pedido recebido: {Customer} - {Total}",
-                    message.Customer,
-                    message.Total);
+                    "Processando pedido {Id} do cliente {Customer}",
+                    message.Id,
+                    message.Customer);
+
+                // Simula um processamento
+                await Task.Delay(1000, stoppingToken);
+
+                await channel.BasicAckAsync(
+                    deliveryTag: eventArgs.DeliveryTag,
+                    multiple: false,
+                    cancellationToken: stoppingToken);
+
+                _logger.LogInformation(
+                    "Pedido {Id} processado com sucesso.",
+                    message.Id);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao processar a mensagem.");
 
 
-            await Task.CompletedTask;
+                // erro, coloque a mensagem novamente na fila
+                await channel.BasicNackAsync(
+                    deliveryTag: eventArgs.DeliveryTag,
+                    multiple: false,
+                    requeue: true,
+                    cancellationToken: stoppingToken);
+            }
         };
 
 
         await channel.BasicConsumeAsync(
             queue: RabbitMqConstants.OrdersQueue,
-            autoAck: true,
+            autoAck: false,
             consumer: consumer,
             cancellationToken: stoppingToken);
 
